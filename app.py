@@ -1,23 +1,35 @@
-from flask import Flask,render_template
+from flask import Flask,render_template,redirect,url_for,request,flash
 from flask_sqlalchemy import SQLAlchemy
-#from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+#from flask_bcrypt import Bcrypt
+
+from flask_login import UserMixin, login_user, LoginManager, current_user,login_required
 
 app = Flask(__name__)
 app.config['SECRET_KEY']='dev'
 app.config['SQLALCHEMY_DATABASE_URI']="postgresql://victor:7mudaki@localhost/flask_auth"
 db = SQLAlchemy(app)
+#bcrypt=Bcrypt(app)
 
-class User(db.Model):
-    id = db.Column(db.Integer(),primary_key=True)
-    email = db.Column(db.String(100),primary_key=True)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.view='login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
+
+class Users(UserMixin, db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    email = db.Column(db.String(100),unique=True,nullable=False)
     first_name = db.Column(db.String(50),nullable=False)
     last_name = db.Column(db.String(50),nullable=False)
-    password = db.Column(db.String(50),nullable=False)
-    profiles  = db.relationship('Profile',backref='user',uselist=False,lazy=True)
+    password = db.Column(db.String(200),nullable=False)
+    profiles  = db.relationship('Profile',backref='users',uselist=False,lazy=True)
 
-
+    
 class Profile(db.Model):
-    id = db.Column(db.Integer(),primary_key=True)
+    id = db.Column(db.Integer,primary_key=True)
     postal_code=db.Column(db.String(50))
     posta_address = db.Column(db.String(100))
     physical_address = db.Column(db.String(500))
@@ -32,7 +44,7 @@ class Profile(db.Model):
     linkedin = db.Column(db.String(100),unique=True)
     region=db.Column(db.String(20),nullable=False)
     country=db.Column(db.String(20),nullable=False)
-    email=db.Column(db.String(100),db.ForeignKey('User.email'),nullable=False)
+    email=db.Column(db.String(100),db.ForeignKey('users.email'),nullable=False)
     profile_dp=db.Column(db.LargeBinary(max))
 
 with app.app_context():
@@ -45,12 +57,55 @@ with app.app_context():
 def home():
     return render_template('home.html')
 
-@app.route('/login', strict_slashes=False)
+
+
+@app.route('/login', methods=('GET','POST'),strict_slashes=False)
 def login():
+    if request.method=='POST':
+        email=request.form["email"]
+        password = request.form["password"]
+
+        user=Users.query.filter_by(email=email).first()
+
+        if check_password_hash(user.password,password):
+            login_user(user)
+            flash("logged in successfully")
+            return redirect(url_for('profile'))
+        
+        else:
+            flash("incorrect password")
+        #else:
+        #flash("email does not exist")
+
+
+
     return render_template('login.html')
 
-@app.route('/register', strict_slashes=False)
+@app.route('/register', methods=('GET','POST'), strict_slashes=False)
 def register():
+    if request.method=='POST':
+        email = request.form['email']
+        first_name=request.form['fname']
+        last_name=request.form['lname']
+        password=request.form['password']
+        confirm_pass=request.form['confirm_pass']
+        
+        if confirm_pass==password:
+            password=generate_password_hash(password)
+            new_user=Users(email=email,first_name=first_name,last_name=last_name,password=password)
+                
+            try:
+                db.session.add(new_user)
+                db.session.commit()
+                flash ("signed up successfully,kindly login")
+                return redirect(url_for('login'))
+
+            except:
+                return f"Not added {email} {first_name} {last_name}"
+        else:
+            flash ("passwords do not match,kindly re enter the password")
+
+
     return render_template('register.html')
 
 @app.route('/profile', strict_slashes=False)

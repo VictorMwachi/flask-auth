@@ -6,7 +6,7 @@
 <div class="row">
 	<div class="col-md-3"></div>
 	<div class="col-md-6">
-		<form action ="{{url_for('login')}}" method="POST">
+		<form action ="{{url_for('register')}}" method="POST">
 			<h3>Registeration form</h3>
 			<label>Email</label><input type="text" name="email" class="form-control" placeholder="example@mail.com" required>
 			<label>First Name</label>
@@ -14,7 +14,7 @@
 			<label>Last Name</label>
 			<input type="text" name="lname" class="form-control" placeholder="Your last name" required>
 			<label>Password</label><input type="password" name="password" class="form-control" placeholder="password" required>
-			<label>Confirm Password</label><input type="password" name="confirm_password" class="form-control" placeholder="confirm password" required>
+			<label>Confirm Password</label><input type="password" name="confirm_pass" class="form-control" placeholder="confirm password" required>
 			<button class="btn btn-primary btn-lg form-control" style="margin-top: 10px;">Register</button>
 			<small>Have an account? <a href="{{url_for('login')}}">Login</a></small>
 	</form>

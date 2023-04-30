@@ -4,6 +4,12 @@
 
 {% block body %}
 
+{% with messages = get_flashed_messages() %}
+{% for message in messages %}
+<div class="alert alert-primary alert-dismissible" role="alert">{{message}}</div>
+{% endfor %}
+{% endwith %}
+
 <div class="container rounded bg-white mt-5 mb-5">
     <div class="row">
         <div class="col-md-3 border-right">
