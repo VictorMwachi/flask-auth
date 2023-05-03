@@ -1,7 +1,7 @@
 from flask import Flask,render_template,redirect,url_for,request,flash
 from flask_sqlalchemy import SQLAlchemy
+#from sqlalchemy_imageattach.entity import Image, image_attachment
 from werkzeug.security import generate_password_hash, check_password_hash
-#from flask_bcrypt import Bcrypt
 
 from flask_login import UserMixin, login_user, LoginManager, current_user,login_required
 
@@ -9,7 +9,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY']='dev'
 app.config['SQLALCHEMY_DATABASE_URI']="postgresql://victor:7mudaki@localhost/flask_auth"
 db = SQLAlchemy(app)
-#bcrypt=Bcrypt(app)
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -26,17 +26,17 @@ class Users(UserMixin, db.Model):
     last_name = db.Column(db.String(50),nullable=False)
     password = db.Column(db.String(200),nullable=False)
     profiles  = db.relationship('Profile',backref='users',uselist=False,lazy=True)
-
+    
     
 class Profile(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     postal_code=db.Column(db.String(50))
-    posta_address = db.Column(db.String(100))
+    postal_address = db.Column(db.String(100))
     physical_address = db.Column(db.String(500))
     phone=db.Column(db.String(20),unique=True,nullable=False)
     website = db.Column(db.String(100),unique=True)
     town=db.Column(db.String(20),nullable=False)
-    interests = db.Column(db.String(500))
+    interests = db.Column(db.Text())
     role=db.Column(db.String(20),nullable=False)
     twitter = db.Column(db.String(100),unique=True)
     facebook = db.Column(db.String(100),unique=True)
@@ -44,8 +44,9 @@ class Profile(db.Model):
     linkedin = db.Column(db.String(100),unique=True)
     region=db.Column(db.String(20),nullable=False)
     country=db.Column(db.String(20),nullable=False)
-    email=db.Column(db.String(100),db.ForeignKey('users.email'),nullable=False)
     profile_dp=db.Column(db.LargeBinary(max))
+    user_id = db.Column(db.Integer,db.ForeignKey('users.id'),nullable=False)
+    
 
 with app.app_context():
     db.create_all()
@@ -70,7 +71,7 @@ def login():
         if check_password_hash(user.password,password):
             login_user(user)
             flash("logged in successfully")
-            return redirect(url_for('profile'))
+            return render_template('profile-2.html',user=user)
         
         else:
             flash("incorrect password")
@@ -113,7 +114,38 @@ def profile():
     return render_template('profile.html')
 
 @app.route('/edit-profile', strict_slashes=False)
+@login_required
 def edit_profile():
+    if request.method=='POST':
+        postal_code=request.form['postal_code']
+        postal_address=request.form['postal_address']
+        physical_address=request.form['physical_address']
+        town=request.form['town']
+        region=request.form['region']
+        country=request.form['country']
+        role=request.form['role']
+        phone=request.form['phone']
+        website=request.form['website']
+        interests=request.form['interest']
+        linkedin=request.form['linkedin']
+        twitter=request.form['twitter']
+        facebook=request.form['facebook']
+        youtube=request.form['youtube']
+
+
+        try:
+            new_profile=Profile(user_id=user_id,youtube=youtube,region=region,twitter=twitter,facebook=facebook,
+                linkedin=linkedin,website=website,role=role,phone=phone,postal_code=postal_code,
+                postal_address=postal_address,physical_address=physical_address,interests=interests,country=country,town=town)
+
+            db.session.add(new_profile)
+            db.session.commit()
+            flash("profile updated succesfully")
+            return render_template('profile.html')
+
+        except:
+            flash("profile note updated,kindly retry")
+
     return render_template('profile-2.html')
 
 
