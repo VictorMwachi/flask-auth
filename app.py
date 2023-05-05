@@ -66,17 +66,18 @@ def login():
         email=request.form["email"]
         password = request.form["password"]
 
-        user=Users.query.filter_by(email=email).first()
+        try:
+            user=Users.query.filter_by(email=email).first()
 
-        if check_password_hash(user.password,password):
-            login_user(user)
-            flash("logged in successfully")
-            return render_template('profile-2.html',user=user)
+            if check_password_hash(user.password,password):
+                login_user(user)
+                flash("logged in successfully")
+                return render_template('profile-2.html',user=user)
         
-        else:
-            flash("incorrect password")
-        #else:
-        #flash("email does not exist")
+            else:
+                flash("incorrect password")
+        except:
+            flash("email does not exist")
 
 
 
@@ -109,11 +110,13 @@ def register():
 
     return render_template('register.html')
 
-@app.route('/profile', strict_slashes=False)
-def profile():
-    return render_template('profile.html')
 
-@app.route('/edit-profile', strict_slashes=False)
+@app.route('/profile', strict_slashes=False)
+@login_required
+def profile():
+    return render_template('profile.html')#,user=user,profile=profile)
+
+@app.route('/edit-profile', methods=('GET','POST'), strict_slashes=False)
 @login_required
 def edit_profile():
     if request.method=='POST':
@@ -124,7 +127,7 @@ def edit_profile():
         region=request.form['region']
         country=request.form['country']
         role=request.form['role']
-        phone=request.form['phone']
+        phone=str(request.form['phone'])
         website=request.form['website']
         interests=request.form['interest']
         linkedin=request.form['linkedin']
