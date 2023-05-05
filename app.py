@@ -72,7 +72,7 @@ def login():
             if check_password_hash(user.password,password):
                 login_user(user)
                 flash("logged in successfully")
-                return render_template('profile-2.html',user=user)
+                return redirect(url_for('profile',user=user))
         
             else:
                 flash("incorrect password")
@@ -127,13 +127,14 @@ def edit_profile():
         region=request.form['region']
         country=request.form['country']
         role=request.form['role']
-        phone=str(request.form['phone'])
+        phone=request.form['phone']
         website=request.form['website']
         interests=request.form['interest']
         linkedin=request.form['linkedin']
         twitter=request.form['twitter']
         facebook=request.form['facebook']
         youtube=request.form['youtube']
+        user_id=request.form['id']
 
 
         try:
@@ -144,7 +145,7 @@ def edit_profile():
             db.session.add(new_profile)
             db.session.commit()
             flash("profile updated succesfully")
-            return render_template('profile.html')
+            return redirect(url_for('profile.html',user=user))
 
         except:
             flash("profile note updated,kindly retry")
